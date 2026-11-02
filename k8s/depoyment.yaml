@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-rabbit-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-rabbit
+  template:
+    metadata:
+      labels:
+        app: ms-rabbit
+    spec:
+      containers:
+      - name: ms-rabbit
+        image: tu_usuario_docker/ms-rabbit:latest
+        ports:
+        - containerPort: 8085
+        env:
+        - name: RABBITMQ_HOST
+          value: "IP_DE_TU_INSTANCIA_EC2"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-rabbit-service
+spec:
+  type: ClusterIP
+  selector:
+    app: ms-rabbit
+  ports:
+    - protocol: TCP
+      port: 8085
+      targetPort: 8085
