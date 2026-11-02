@@ -1,6 +1,6 @@
 package cl.sanos_y_salvos.rabbirMQ.api.controller;
 
-import cl.sanos_y_salvos.rabbirMQ.api.dto.ExchangeRequest;
+import cl.sanos_y_salvos.rabbirMQ.api.dto.ExchageRequest;
 import cl.sanos_y_salvos.rabbirMQ.api.dto.QueueRequest;
 import cl.sanos_y_salvos.rabbirMQ.api.service.RabbitService;
 import jakarta.validation.Valid;
@@ -31,7 +31,7 @@ public class RabbitController {
     }
 
     @PostMapping("/exchanges")
-    public ResponseEntity<String> createExchange(@Valid @RequestBody ExchangeRequest request) {
+    public ResponseEntity<String> createExchange(@Valid @RequestBody ExchageRequest request) {
         rabbitService.createExchange(request.getName(), request.getType());
         return ResponseEntity.status(HttpStatus.CREATED).body("Exchange creado: " + request.getName());
     }
