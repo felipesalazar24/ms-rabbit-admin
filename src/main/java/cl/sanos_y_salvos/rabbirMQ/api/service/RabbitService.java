@@ -1,6 +1,7 @@
 package cl.sanos_y_salvos.rabbirMQ.api.service;
 
 import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
@@ -29,8 +30,19 @@ public class RabbitService {
             amqpAdmin.declareExchange(new TopicExchange(name, true, false));
         }
     }
-    
+
     public void deleteExchange(String name) {
         amqpAdmin.deleteExchange(name);
+    }
+
+    public void createBinding(String queueName, String exchangeName, String routingKey) {
+        Binding binding = new Binding(
+                queueName,
+                Binding.DestinationType.QUEUE,
+                exchangeName,
+                routingKey,
+                null
+        );
+        amqpAdmin.declareBinding(binding);
     }
 }
