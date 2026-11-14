@@ -1,34 +1,43 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ms-rabbit-deployment
+  name: ms-admin-deployment
+  labels:
+    app: ms-admin
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ms-rabbit
+      app: ms-admin
   template:
     metadata:
       labels:
-        app: ms-rabbit
+        app: ms-admin
     spec:
-      containers:
-      - name: ms-rabbit
-        image: tu_usuario_docker/ms-rabbit:latest
-        ports:
-        - containerPort: 8085
-        env:
-        - name: RABBITMQ_HOST
-          value: "IP_DE_TU_INSTANCIA_EC2"
+      - containers:
+        - name: ms-admin
+          image: felipesalazar24/ms-admin:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8085
+          env:
+            - name: RABBITMQ_HOST
+              value: "IP_PRIVADA_DE_TU_EC2_O_SERVICIO"
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USER
+              value: "guest"
+            - name: RABBITMQ_PASS
+              value: "guest"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ms-rabbit-service
+  name: ms-admin-service
 spec:
   type: ClusterIP
   selector:
-    app: ms-rabbit
+    app: ms-admin
   ports:
     - protocol: TCP
       port: 8085

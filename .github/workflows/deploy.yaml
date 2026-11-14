@@ -1,31 +1,65 @@
-name: Construir y Subir ms-rabbit
+name: CI/CD Pipeline - ms-admin
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+
+env:
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: sanos-y-salvos-eks
 
 jobs:
-  build:
+  build-and-push-docker:
+    name: Build & Push ms-admin
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-    - name: Dar permisos de ejecución a gradlew
-      run: chmod +x gradlew
-    - name: Construir con Gradle
-      run: ./gradlew build -x test
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Construir y Empujar Imagen Docker
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: tu_usuario_docker/ms-rabbit:latest
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v3
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - name: Dar permisos de ejecución a gradlew
+        run: chmod +x gradlew
+
+      - name: Construir con Gradle
+        run: ./gradlew build -x test
+
+      - name: Iniciar sesión en Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Construir y Subir imagen ms-admin
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/ms-admin:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/ms-admin:latest
+
+  deploy-to-aws:
+    name: Deploy ms-admin to AWS EKS
+    needs: build-and-push-docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+        
+      - name: Conectar con Cluster EKS
+        run: aws eks update-kubeconfig --name ${{ env.CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      - name: Aplicar Cambios en Kubernetes
+        run: |
+          kubectl apply -f ./k8s/
+          kubectl rollout restart deployment ms-admin-deployment
