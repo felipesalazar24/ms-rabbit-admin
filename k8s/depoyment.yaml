@@ -22,7 +22,7 @@ spec:
             - containerPort: 8085
           env:
             - name: RABBITMQ_HOST
-              value: "IP_PRIVADA_DE_TU_EC2_O_SERVICIO"
+              value: "rabbitmq-service"
             - name: RABBITMQ_PORT
               value: "5672"
             - name: RABBITMQ_USER
