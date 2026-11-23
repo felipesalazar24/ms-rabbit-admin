@@ -1,0 +1,50 @@
+services:
+  rabbitmq-1:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-1
+    hostname: rabbitmq-1
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SANOS_Y_SALVOS_SECRET_COOKIE"
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - rabbitmq1_data:/var/lib/rabbitmq
+    networks:
+      - rabbit-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  rabbitmq-2:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-2
+    hostname: rabbitmq-2
+    depends_on:
+      rabbitmq-1:
+        condition: service_healthy
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SANOS_Y_SALVOS_SECRET_COOKIE"
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+    volumes:
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - rabbitmq2_data:/var/lib/rabbitmq
+    networks:
+      - rabbit-net
+
+volumes:
+  rabbitmq1_data:
+  rabbitmq2_data:
+
+networks:
+  rabbit-net:
+    driver: bridge
